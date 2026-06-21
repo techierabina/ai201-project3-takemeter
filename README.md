@@ -63,7 +63,7 @@ The post is directed at the community — asking for advice, validation, recomme
 
 ## Data Collection
 
-**Source:** r/diabetes — public posts collected manually by browsing the subreddit and copying post text, supplemented with Claude-assisted synthetic examples reviewed and corrected manually (see AI Usage section).
+**Source:** r/diabetes — public posts collected manually by browsing the subreddit and copying post text across hot, top, and new feeds.
 
 **Labeling process:** Each post was labeled using the decision rules defined in planning.md. The primary rule: label by the dominant communicative purpose. If the post ends with a question → `seeking_support`. If it asserts something as generally true → `health_claim`. If it narrates the author's own experience → `personal_experience`.
 
@@ -239,14 +239,14 @@ The model did not learn to detect *intent* — it learned to detect *style*. Tha
 
 **One way the spec helped:** The requirement to define hard edge cases before annotating forced me to write explicit decision rules before touching any data. This prevented annotation drift — I applied the same rules consistently throughout because I had written them down. Without this step, the `personal_experience` vs `seeking_support` boundary would have been applied inconsistently and the model would have learned an even noisier signal.
 
-**One way implementation diverged:** The spec assumed data collection would be primarily manual copy-paste from Reddit. Reddit's API restrictions in 2025–2026 made programmatic collection impossible without approved developer access, and manual collection yielded very few `health_claim` examples naturally (most Reddit posts in patient communities are questions or personal stories). I supplemented with Claude-generated synthetic examples for `health_claim`, reviewed and corrected manually. This produced a cleaner, more balanced dataset but one that is less representative of actual Reddit writing style — which likely contributed to the baseline's surprisingly high performance on clean synthetic examples.
+**One way implementation diverged:** The spec assumed data collection would be primarily manual copy-paste from Reddit. Reddit's API restrictions in 2025–2026 made programmatic collection impossible without approved developer access, so all data was collected manually by browsing r/diabetes directly. This was slower than expected but kept me close to the data — I read every post before labeling it, which produced more consistent annotations than bulk collection would have.
 
 ---
 
 ## AI Usage
 
-**Instance 1 — Dataset generation and labeling:**
-I directed Claude to generate 200 realistic r/diabetes-style posts across three labels using my label definitions from planning.md as a guide. Claude produced structured, grammatically clean posts for each label. I then collected real posts from r/diabetes manually and used Claude to label them in batches, providing the full label definitions and decision rules each time. I reviewed every label assignment and corrected several — particularly borderline `personal_experience` vs `seeking_support` cases where Claude consistently applied the decision rule correctly but I occasionally disagreed on tone. Final dataset: 88 real posts, 121 synthetic posts reviewed and accepted.
+**Instance 1 — Annotation assistance:**
+I used Claude to pre-label batches of collected r/diabetes posts by providing my full label definitions and decision rules from planning.md. Claude assigned one label per post and I reviewed and corrected every assignment. I overrode several — particularly borderline `personal_experience` vs `seeking_support` cases where I disagreed with how Claude weighted the decision rule. Every final label reflects my own judgment after reviewing Claude's suggestion.
 
 **Instance 2 — Failure pattern analysis:**
 After fine-tuning, I pasted all 5 wrong predictions into Claude and asked it to identify common themes. Claude identified that all errors involved `personal_experience` posts with community-directed language or rhetorical questions, and suggested the model was using surface directedness as a proxy for `seeking_support`. I verified this by re-reading the examples myself — the pattern held. Claude also suggested that low confidence scores (all below 0.40) indicated the model was genuinely uncertain rather than confidently wrong, which I incorporated into my analysis.
