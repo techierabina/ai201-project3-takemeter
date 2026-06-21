@@ -175,32 +175,37 @@ seeking_support
 
 |  | Predicted: personal_experience | Predicted: health_claim | Predicted: seeking_support |
 |---|---|---|---|
-| **True: personal_experience** | 5 | 0 | 5 |
+| **True: personal_experience** | 10 | 0 | 0 |
 | **True: health_claim** | 0 | 10 | 0 |
-| **True: seeking_support** | 0 | 0 | 10 |
+| **True: seeking_support** | 4 | 0 | 6 |
 
 ### Analysis of Wrong Predictions
 
-All 5 errors share the same pattern: true label `personal_experience`, predicted `seeking_support`. No other label pair was confused. This is a directional, systematic failure — not random noise.
+All 4 errors share the same pattern: true label `seeking_support`, predicted `personal_experience`. No other label pair was confused. This is a directional, systematic failure — not random noise.
 
 **Wrong prediction #1:**
-> "Been T1D for 22 years now. Some days it still catches me off guard how much mental energy this disease takes. Not looking for advice just needed to say it somewhere people understand."
-- True: `personal_experience` | Predicted: `seeking_support` | Confidence: 0.37
-- **Analysis:** The phrase "needed to say it somewhere people understand" sounds like it is directed at the community — which is the surface signal the model uses for `seeking_support`. The model missed the explicit disclaimer "not looking for advice" which signals personal venting, not a request.
+> "How does it feel to watch a family member inject insulin if you aren't diabetic? I go to a secluded place to inject and wonder if I'm isolating myself from family."
+- True: `seeking_support` | Predicted: `personal_experience` | Confidence: 0.37
+- **Analysis:** This post opens with a question directed at non-diabetics but then shifts into personal reflection about the author's own behavior. The second sentence reads like a personal narrative ("I go to a secluded place") which likely triggered `personal_experience`. The model couldn't detect that the personal reflection is setup for a community question, not the point of the post.
 
 **Wrong prediction #2:**
-> "I was uncontrolled for years. Diet and exercise wasn't helping. My endo put me on GLP1 and I am so satisfied with my results."
-- True: `personal_experience` | Predicted: `seeking_support` | Confidence: 0.38
-- **Analysis:** This is a short success post with no question. The model may have learned that short posts without strong medical claims default to `seeking_support`. The confidence is very low (0.38), indicating genuine uncertainty.
+> "My doctor switched my meds and my fasting sugars dropped from 280-400 down to 160-200 in two weeks. Is that big a drop concerning or have I found the right cocktail?"
+- True: `seeking_support` | Predicted: `personal_experience` | Confidence: 0.37
+- **Analysis:** The post leads with a personal medical update (doctor switched meds, numbers dropped) before asking a question. The model weighted the personal narrative opening more heavily than the question at the end. This reveals the model reads beginning of post more than end when deciding the label.
 
 **Wrong prediction #3:**
-> "Finally figured out my dawn phenomenon. Waking up high every day for two years. A small overnight basal increase fixed it in a week. Why did I wait so long to address this."
-- True: `personal_experience` | Predicted: `seeking_support` | Confidence: 0.40
-- **Analysis:** "Why did I wait so long to address this" is a rhetorical question, not a community question — but the model treated it as a literal question and predicted `seeking_support`. This reveals the model cannot distinguish rhetorical from genuine questions.
+> "Looking for something small and discreet and not heinously expensive for a medical alert bracelet."
+- True: `seeking_support` | Predicted: `personal_experience` | Confidence: 0.39
+- **Analysis:** This is a very short post with no explicit question mark. The model likely missed this as `seeking_support` because it contains no narrative structure and no question mark — just a declarative statement of need. Short posts with no question mark appear to default to `personal_experience` in this model.
 
-**Pattern identified:** The model consistently misclassifies `personal_experience` posts as `seeking_support` when the post contains community-directed language, rhetorical questions, or phrases that sound like requests even when the post is self-contained. All 5 errors had very low confidence (0.36–0.40), meaning the model was uncertain — it just defaulted to the wrong label.
+**Wrong prediction #4:**
+> "Help me with diet pls! I have T2 diabetes and my thyroid has been high for 4 months. I don't know what to eat and I'm always on a budget. Please help me. I'm not good at cooking and do meal prep once a week."
+- True: `seeking_support` | Predicted: `personal_experience` | Confidence: 0.40
+- **Analysis:** Despite explicit "Help me" and "Please help me" phrases this was misclassified. The post contains substantial personal context (thyroid issues, budget constraints, cooking habits) that may have overwhelmed the help-seeking signal. The model appears to weight narrative content over explicit help requests when the post is long.
 
-**Why this boundary is hard:** Personal experience posts in patient communities often use community-directed language ("needed to share this with people who understand") without actually asking for anything. The structural signal the model learned for `seeking_support` — community-directed language — overlaps with how personal posts are naturally written on Reddit.
+**Pattern identified:** The model consistently misclassifies `seeking_support` posts as `personal_experience` when the post contains substantial personal context before or around the question. All 4 errors had very low confidence (0.37–0.40), meaning the model was genuinely uncertain. The `personal_experience` vs `seeking_support` boundary is the hardest for this model — posts in patient communities naturally blend personal narrative with community questions, and the model learned to weight narrative content over question structure.
+
+**Why this boundary is hard:** In r/diabetes, people rarely ask bare questions. They provide personal context first — their diagnosis, their current situation, their frustration — before asking for help. The model learned to associate personal context with `personal_experience`, which fails when that context is setup for a question rather than the point of the post.
 
 ---
 
