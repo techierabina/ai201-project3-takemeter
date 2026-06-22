@@ -10,7 +10,7 @@
 
 TakeMeter is a fine-tuned text classifier that categorizes posts from r/diabetes into three functionally distinct labels: `personal_experience`, `health_claim`, and `seeking_support`. The classifier was built by fine-tuning DistilBERT on 200 labeled examples and evaluated against a zero-shot Groq LLaMA 3.3-70b baseline.
 
-The core question this project answers: *can a small fine-tuned model learn to distinguish what a diabetes post is doing — narrating, asserting, or asking — well enough to be useful in a real community tool?*
+The core question this project answers: *can a small fine-tuned model learn to distinguish what a diabetes post is doing like narrating, asserting, or asking . Is it well enough to be useful in a real community tool?*
 
 ---
 
@@ -18,7 +18,7 @@ The core question this project answers: *can a small fine-tuned model learn to d
 
 **Community:** r/diabetes (Reddit)
 
-r/diabetes is a public subreddit with over 400,000 members where people living with Type 1, Type 2, and gestational diabetes share experiences, ask questions, and discuss management strategies. It was chosen because posts serve fundamentally different communicative purposes — some are personal narratives, some assert medical facts, and some are calls for community support. These distinctions have real-world utility: a moderation tool, misinformation flagging system, or triage bot for peer support platforms could all benefit from knowing what a post is doing before acting on it.
+r/diabetes is a public subreddit with over 400,000 members where people living with Type 1, Type 2, and gestational diabetes share experiences, ask questions, and discuss management strategies. It was chosen because posts serve fundamentally different communicative purposes like some are personal narratives, some assert medical facts, and some are calls for community support. These distinctions have real-world utility: a moderation tool, misinformation flagging system, or triage bot for peer support platforms could all benefit from knowing what a post is doing before acting on it.
 
 ---
 
@@ -29,7 +29,7 @@ Three labels were defined, each capturing a distinct communicative function:
 ---
 
 **`personal_experience`**
-The post centers on narrating something that happened to the author — a diagnosis story, a management win or setback, an emotional reaction to living with diabetes. The post is primarily descriptive and retrospective, not asking for advice or making general factual claims.
+The post centers on narrating something that happened to the author like a diagnosis story, a management win or setback, an emotional reaction to living with diabetes. The post is primarily descriptive and retrospective, not asking for advice or making general factual claims.
 
 *Example 1:*
 > "Just hit my one-year diaversary. Last year I was in the ER with a blood sugar of 480, absolutely terrified. Today I ran a 5K and my CGM barely blinked. Didn't think I'd ever feel normal again."
@@ -40,7 +40,7 @@ The post centers on narrating something that happened to the author — a diagno
 ---
 
 **`health_claim`**
-The post makes a factual or medical assertion about diabetes — about causes, treatments, diet, medication, symptoms, or outcomes. The claim may be evidence-based or misinformation; what matters is that the post is asserting something as generally true, not just describing personal experience.
+The post makes a factual or medical assertion about diabetes like about causes, treatments, diet, medication, symptoms, or outcomes. The claim may be evidence-based or misinformation; what matters is that the post is asserting something as generally true, not just describing personal experience.
 
 *Example 1:*
 > "Metformin has been shown in multiple studies to reduce cardiovascular risk in T2D patients beyond its glucose lowering effects. It is criminally underused as a first line treatment."
@@ -51,7 +51,7 @@ The post makes a factual or medical assertion about diabetes — about causes, t
 ---
 
 **`seeking_support`**
-The post is directed at the community — asking for advice, validation, recommendations, or shared experience. The defining feature is that the author is waiting for a response; the post is a question or a request, not a self-contained statement.
+The post is directed at the community  asking for advice, validation, recommendations, or shared experience. The defining feature is that the author is waiting for a response; the post is a question or a request, not a self-contained statement.
 
 *Example 1:*
 > "Newly diagnosed T2D here, completely overwhelmed. What do you wish someone had told you in the first month? Any resources or habits that helped you most?"
@@ -157,10 +157,10 @@ seeking_support
 
 | Label | Precision | Recall | F1 | Support |
 |---|---|---|---|---|
-| `personal_experience` | 1.00 | 0.50 | 0.67 | 10 |
+| `personal_experience` | 0.71 | 1.00 | 0.83 | 10 |
 | `health_claim` | 1.00 | 1.00 | 1.00 | 10 |
-| `seeking_support` | 0.67 | 1.00 | 0.80 | 10 |
-| **macro avg** | **0.89** | **0.83** | **0.82** | 30 |
+| `seeking_support` | 1.00 | 0.60 | 0.75 | 10 |
+| **macro avg** | **0.90** | **0.87** | **0.86** | 30 |
 
 ### Per-Class Metrics — Baseline
 
@@ -196,16 +196,16 @@ All 4 errors share the same pattern: true label `seeking_support`, predicted `pe
 **Wrong prediction #3:**
 > "Looking for something small and discreet and not heinously expensive for a medical alert bracelet."
 - True: `seeking_support` | Predicted: `personal_experience` | Confidence: 0.39
-- **Analysis:** This is a very short post with no explicit question mark. The model likely missed this as `seeking_support` because it contains no narrative structure and no question mark — just a declarative statement of need. Short posts with no question mark appear to default to `personal_experience` in this model.
+- **Analysis:** This is a very short post with no explicit question mark. The model likely missed this as `seeking_support` because it contains no narrative structure and no question mark it is just a declarative statement of need. Short posts with no question mark appear to default to `personal_experience` in this model.
 
 **Wrong prediction #4:**
 > "Help me with diet pls! I have T2 diabetes and my thyroid has been high for 4 months. I don't know what to eat and I'm always on a budget. Please help me. I'm not good at cooking and do meal prep once a week."
 - True: `seeking_support` | Predicted: `personal_experience` | Confidence: 0.40
 - **Analysis:** Despite explicit "Help me" and "Please help me" phrases this was misclassified. The post contains substantial personal context (thyroid issues, budget constraints, cooking habits) that may have overwhelmed the help-seeking signal. The model appears to weight narrative content over explicit help requests when the post is long.
 
-**Pattern identified:** The model consistently misclassifies `seeking_support` posts as `personal_experience` when the post contains substantial personal context before or around the question. All 4 errors had very low confidence (0.37–0.40), meaning the model was genuinely uncertain. The `personal_experience` vs `seeking_support` boundary is the hardest for this model — posts in patient communities naturally blend personal narrative with community questions, and the model learned to weight narrative content over question structure.
+**Pattern identified:** The model consistently misclassifies `seeking_support` posts as `personal_experience` when the post contains substantial personal context before or around the question. All 4 errors had very low confidence (0.37–0.40), meaning the model was genuinely uncertain. The `personal_experience` vs `seeking_support` boundary is the hardest for this model as posts in patient communities naturally blend personal narrative with community questions, and the model learned to weight narrative content over question structure.
 
-**Why this boundary is hard:** In r/diabetes, people rarely ask bare questions. They provide personal context first — their diagnosis, their current situation, their frustration — before asking for help. The model learned to associate personal context with `personal_experience`, which fails when that context is setup for a question rather than the point of the post.
+**Why this boundary is hard:** In r/diabetes, people rarely ask bare questions. They provide personal context first their diagnosis, their current situation, their frustration — before asking for help. The model learned to associate personal context with `personal_experience`, which fails when that context is setup for a question rather than the point of the post.
 
 ---
 
@@ -216,7 +216,7 @@ All 4 errors share the same pattern: true label `seeking_support`, predicted `pe
 | "Foot care is not optional in diabetes. Peripheral neuropathy makes injuries undetectable..." | `health_claim` | `health_claim` ✅ | 0.99 |
 | "Had to leave my nephew's wedding reception early because I went low and couldn't bring it back up..." | `personal_experience` | `personal_experience` ✅ | 0.97 |
 | "Newly diagnosed T2D here completely overwhelmed. What do you wish someone had told you..." | `seeking_support` | `seeking_support` ✅ | 0.98 |
-| "Been T1D for 22 years now. Some days it still catches me off guard how much mental energy this takes..." | `personal_experience` | `seeking_support` ❌ | 0.37 |
+| "Looking for something small and discreet and not heinously expensive for a medical alert bracelet." | `seeking_support` | `personal_experience` ❌ | 0.39 |
 | "Metformin has been shown in multiple studies to reduce cardiovascular risk in T2D patients..." | `health_claim` | `health_claim` ✅ | 0.99 |
 
 The correct prediction of the foot care post is reasonable: the post makes a declarative factual assertion about neuropathy and foot complications without any personal narrative or question, which maps cleanly to `health_claim`.
@@ -227,9 +227,9 @@ The correct prediction of the foot care post is reasonable: the post makes a dec
 
 I intended the model to learn the *communicative function* of each post — what the author was trying to do. What the model actually learned were *surface linguistic signals*: medical vocabulary for `health_claim`, question marks and community-directed phrases for `seeking_support`, and first-person narrative for `personal_experience`.
 
-This works well most of the time because these signals are genuinely correlated with communicative function. But the model fails when the surface signals are misleading — when a personal post uses community-directed language, or when a rhetorical question looks like a genuine one.
+This works well most of the time because these signals are genuinely correlated with communicative function. But the model fails when the surface signals are misleading  when a personal post uses community-directed language, or when a rhetorical question looks like a genuine one.
 
-The `health_claim` label was easiest to learn (F1 = 1.00) because health claims have the most distinctive vocabulary: clinical terms, hedges like "studies show," and assertive declarative structure. `personal_experience` was hardest (F1 = 0.67) because it shares surface features with `seeking_support` — both are personal, both are written to the community, and the only real distinction is whether the author wants a response.
+The `health_claim` label was easiest to learn (F1 = 1.00) because health claims have the most distinctive vocabulary: clinical terms, assertive declarative structure, and medical hedges. `personal_experience` achieved F1 = 0.83 it is good but with lower precision because the model over-predicted it for `seeking_support` posts with heavy personal context. `seeking_support` was hardest (F1 = 0.75) because posts in this label often lead with personal narrative before the question, which the model misread as personal experience.
 
 The model did not learn to detect *intent* — it learned to detect *style*. That gap is fundamental and cannot be fully closed with 200 examples.
 
@@ -237,19 +237,19 @@ The model did not learn to detect *intent* — it learned to detect *style*. Tha
 
 ## Spec Reflection
 
-**One way the spec helped:** The requirement to define hard edge cases before annotating forced me to write explicit decision rules before touching any data. This prevented annotation drift — I applied the same rules consistently throughout because I had written them down. Without this step, the `personal_experience` vs `seeking_support` boundary would have been applied inconsistently and the model would have learned an even noisier signal.
+**One way the spec helped:** The requirement to define hard edge cases before annotating forced me to write explicit decision rules before touching any data. This prevented annotation drift, I applied the same rules consistently throughout because I had written them down. Without this step, the `personal_experience` vs `seeking_support` boundary would have been applied inconsistently and the model would have learned an even noisier signal.
 
-**One way implementation diverged:** The spec assumed data collection would be primarily manual copy-paste from Reddit. Reddit's API restrictions in 2025–2026 made programmatic collection impossible without approved developer access, so all data was collected manually by browsing r/diabetes directly. This was slower than expected but kept me close to the data — I read every post before labeling it, which produced more consistent annotations than bulk collection would have.
+**One way implementation diverged:** The spec assumed data collection would be primarily manual copy-paste from Reddit. Reddit's API restrictions in 2025–2026 made programmatic collection impossible without approved developer access, so all data was collected manually by browsing r/diabetes directly. This was slower than expected but kept me close to the data. I read every post before labeling it, which produced more consistent annotations than bulk collection would have.
 
 ---
 
 ## AI Usage
 
 **Instance 1 — Annotation assistance:**
-I used Claude to pre-label batches of collected r/diabetes posts by providing my full label definitions and decision rules from planning.md. Claude assigned one label per post and I reviewed and corrected every assignment. I overrode several — particularly borderline `personal_experience` vs `seeking_support` cases where I disagreed with how Claude weighted the decision rule. Every final label reflects my own judgment after reviewing Claude's suggestion.
+I used Claude to pre-label batches of collected r/diabetes posts by providing my full label definitions and decision rules from planning.md. Claude assigned one label per post and I reviewed and corrected every assignment. I overrode several particularly borderline `personal_experience` vs `seeking_support` cases where I disagreed with how Claude weighted the decision rule. Every final label reflects my own judgment after reviewing Claude's suggestion.
 
 **Instance 2 — Failure pattern analysis:**
-After fine-tuning, I pasted all 5 wrong predictions into Claude and asked it to identify common themes. Claude identified that all errors involved `personal_experience` posts with community-directed language or rhetorical questions, and suggested the model was using surface directedness as a proxy for `seeking_support`. I verified this by re-reading the examples myself — the pattern held. Claude also suggested that low confidence scores (all below 0.40) indicated the model was genuinely uncertain rather than confidently wrong, which I incorporated into my analysis.
+After fine-tuning, I pasted all 4 wrong predictions into Claude and asked it to identify common themes. Claude identified that all errors involved `personal_experience` posts with community-directed language or rhetorical questions, and suggested the model was using surface directedness as a proxy for `seeking_support`. I verified this by re-reading the examples myself — the pattern held. Claude also suggested that low confidence scores (all below 0.40) indicated the model was genuinely uncertain rather than confidently wrong, which I incorporated into my analysis.
 
 **Instance 3 — planning.md structure:**
 I asked Claude to help structure planning.md by generating example edge cases for stress-testing my label definitions before annotation. Claude produced 10 boundary posts between `personal_experience` and `seeking_support`. Several of these I could not cleanly classify with my original rules, which prompted me to add the explicit tiebreaker ordering (question → claim → narrative) to the decision rules before annotating.
