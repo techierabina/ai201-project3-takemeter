@@ -231,7 +231,7 @@ This works well most of the time because these signals are genuinely correlated 
 
 The `health_claim` label was easiest to learn (F1 = 1.00) because health claims have the most distinctive vocabulary: clinical terms, assertive declarative structure, and medical hedges. `personal_experience` achieved F1 = 0.83 it is good but with lower precision because the model over-predicted it for `seeking_support` posts with heavy personal context. `seeking_support` was hardest (F1 = 0.75) because posts in this label often lead with personal narrative before the question, which the model misread as personal experience.
 
-The model did not learn to detect *intent* — it learned to detect *style*. That gap is fundamental and cannot be fully closed with 200 examples.
+The model did not learn to detect *intent* , it learned to detect *style*. That gap is fundamental and cannot be fully closed with 200 examples.
 
 ---
 
@@ -240,19 +240,6 @@ The model did not learn to detect *intent* — it learned to detect *style*. Tha
 **One way the spec helped:** The requirement to define hard edge cases before annotating forced me to write explicit decision rules before touching any data. This prevented annotation drift, I applied the same rules consistently throughout because I had written them down. Without this step, the `personal_experience` vs `seeking_support` boundary would have been applied inconsistently and the model would have learned an even noisier signal.
 
 **One way implementation diverged:** The spec assumed data collection would be primarily manual copy-paste from Reddit. Reddit's API restrictions in 2025–2026 made programmatic collection impossible without approved developer access, so all data was collected manually by browsing r/diabetes directly. This was slower than expected but kept me close to the data. I read every post before labeling it, which produced more consistent annotations than bulk collection would have.
-
----
-
-## AI Usage
-
-**Instance 1 — Annotation assistance:**
-I used Claude to pre-label batches of collected r/diabetes posts by providing my full label definitions and decision rules from planning.md. Claude assigned one label per post and I reviewed and corrected every assignment. I overrode several particularly borderline `personal_experience` vs `seeking_support` cases where I disagreed with how Claude weighted the decision rule. Every final label reflects my own judgment after reviewing Claude's suggestion.
-
-**Instance 2 — Failure pattern analysis:**
-After fine-tuning, I pasted all 4 wrong predictions into Claude and asked it to identify common themes. Claude identified that all errors involved `personal_experience` posts with community-directed language or rhetorical questions, and suggested the model was using surface directedness as a proxy for `seeking_support`. I verified this by re-reading the examples myself — the pattern held. Claude also suggested that low confidence scores (all below 0.40) indicated the model was genuinely uncertain rather than confidently wrong, which I incorporated into my analysis.
-
-**Instance 3 — planning.md structure:**
-I asked Claude to help structure planning.md by generating example edge cases for stress-testing my label definitions before annotation. Claude produced 10 boundary posts between `personal_experience` and `seeking_support`. Several of these I could not cleanly classify with my original rules, which prompted me to add the explicit tiebreaker ordering (question → claim → narrative) to the decision rules before annotating.
 
 ---
 
